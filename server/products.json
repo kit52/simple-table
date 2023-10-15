@@ -1,0 +1,28 @@
+{
+    "products": [
+        {
+            "id": 1,
+            "name": "Тестовое задание",
+            "weight": "123 кб",
+            "orderDate": "2023-10-04T12:44:46.834Z",
+            "inStock": true,
+            "customer": "Tatlin.FLEX"
+        },
+        {
+            "id": 2,
+            "name": "Алексей",
+            "weight": "85 кг",
+            "orderDate": "2023-10-13T13:59:55.579Z",
+            "inStock": true,
+            "customer": "Tatlin.FLEX"
+        },
+        {
+            "id": 3,
+            "name": "Чак Норрис",
+            "weight": "200 тон",
+            "orderDate": "2023-10-11T13:51:16.289Z",
+            "inStock": false,
+            "customer": "Tatlin.FLEX"
+        }
+    ]
+}
