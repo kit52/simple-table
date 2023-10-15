@@ -19,7 +19,7 @@
         {
             "id": 3,
             "name": "Чак Норрис",
-            "weight": "200 тон",
+            "weight": "200 тонн",
             "orderDate": "2023-10-11T13:51:16.289Z",
             "inStock": false,
             "customer": "Tatlin.FLEX"
