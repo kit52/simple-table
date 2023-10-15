@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Product } from '../types';
-axios.defaults.baseURL = 'http://localhost:3000/products';
+axios.defaults.baseURL = 'http://localhost:3002/products';
 
 export const fetchDataProducts = () => {
   return axios.get<Product[]>('');

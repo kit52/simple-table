@@ -13,7 +13,7 @@ body {
   padding: 0 20px;
 }
 .table-wrapper {
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 .table {
   min-width: 992px;
