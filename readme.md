@@ -23,3 +23,17 @@
    ```bash
     npm run start
    ```
+
+## Список используемых библиотек:
+
+### фронтенд:
+
+1. React
+2. antd
+3. dayjs
+4. axios
+
+### Бекенд:
+
+1. express
+2. cors
