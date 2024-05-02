@@ -1,131 +1,114 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  DatePicker,
-  Switch,
-  message,
-  Dropdown,
-  Menu,
-} from 'antd';
-import {
-  EditOutlined,
-  DeleteOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
-import { Product } from './types';
-import ProductModalProps from './components/ProductModalProps/ProductModalProps';
-import {
-  createProduct,
-  deleteProduct,
-  fetchDataProducts,
-  updateProduct,
-} from './api/api';
-import type { MenuProps } from 'antd';
+import { Table, Button, message, Dropdown } from 'antd';
+import { SettingOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+
+import { Product } from './types';
+import ProductModal from './components/ProductModal/ProductModal';
+import { createProduct, deleteProduct, fetchDataProducts, updateProduct } from './api/api';
 
 const { Column } = Table;
 
 const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isPending, SetIsPending] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [messageApi, contextHolder] = message.useMessage();
-  const errorHandler = () => {
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
+  const [messageApi] = message.useMessage();
+
+  const showError = useCallback(() => {
     messageApi.open({
       type: 'error',
       content: 'Ошибка при получении данных',
     });
-  };
-  useEffect(() => {
-    fetchData();
-  }, []);
-  const changeModalVisible = useCallback((val: boolean) => {
-    setModalVisible(val);
-    setSelectedProduct(null);
-  }, []);
+  }, [messageApi]);
 
-  const fetchData = async () => {
-    SetIsPending(true);
+  const fetchData = useCallback(async () => {
+    setIsPending(true);
     try {
       const response = await fetchDataProducts();
       setProducts(response.data);
     } catch (error) {
-      errorHandler();
+      showError();
     } finally {
-      SetIsPending(false);
+      setIsPending(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const changeModalVisible = useCallback((val: boolean) => {
+    setModalVisible(val);
+    setSelectedProduct(undefined);
+  }, []);
 
   const handleEdit = useCallback((product: Product) => {
     setSelectedProduct(product);
     setModalVisible(true);
   }, []);
 
-  const handleDelete = async (product: Product) => {
-    SetIsPending(true);
-    try {
-      const response = await deleteProduct(product.id);
-      const products = await fetchDataProducts();
-      setProducts(products.data);
-    } catch (error) {
-      errorHandler();
-    } finally {
-      SetIsPending(false);
-    }
-  };
+  const handleDelete = useCallback(
+    async (product: Product) => {
+      setIsPending(true);
+      try {
+        await deleteProduct(product.id);
+        fetchData();
+      } catch (error) {
+        showError();
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [fetchData, showError]
+  );
 
-  const onFinish = async (product: Product, id?: number) => {
-    SetIsPending(true);
+  const onFinish = useCallback(
+    async (product: Product, id?: number) => {
+      setIsPending(true);
+      try {
+        if (id) {
+          await updateProduct(product);
+        } else {
+          await createProduct(product);
+        }
+        fetchData();
+      } catch (error) {
+        showError();
+      } finally {
+        setModalVisible(false);
+        setIsPending(false);
+        setSelectedProduct(undefined);
+      }
+    },
+    [fetchData, showError]
+  );
 
-    try {
-      const response = id
-        ? await updateProduct(product)
-        : await createProduct(product);
-
-      const products = await fetchDataProducts();
-      setProducts(products.data);
-    } catch (error) {
-      errorHandler();
-    } finally {
-      setModalVisible(false);
-      SetIsPending(false);
-      setSelectedProduct(null);
-    }
-  };
-
-  const getMenuProps = (record: Product) => {
-    return {
+  const getMenuProps = useCallback(
+    (record: Product) => ({
       items: [
         {
           label: 'Изменить',
-          key: '1',
+          key: 'edit',
           onClick: () => handleEdit(record),
         },
         {
           label: 'Удалить',
-          key: '2',
+          key: 'delete',
           onClick: () => handleDelete(record),
         },
       ],
-    };
-  };
+    }),
+    [handleEdit, handleDelete]
+  );
+
   return (
     <div className="app">
       <h1>Таблица</h1>
       <div className="table-wrapper">
-        <Table className="table" dataSource={products} rowKey="id">
-          <Column
-            title="ID товара"
-            dataIndex="id"
-            key="id"
-            sorter={(a: Product, b: Product) => a.id - b.id}
-          />
+        <Table className="table" dataSource={products} rowKey="id" loading={isPending}>
+          <Column title="ID товара" dataIndex="id" key="id" sorter={(a: Product, b: Product) => a.id - b.id} />
           <Column
             title="Наименование товара"
             dataIndex="name"
@@ -137,14 +120,9 @@ const App: React.FC = () => {
             title="Дата заказа"
             dataIndex="orderDate"
             key="orderDate"
-            sorter={(a: Product, b: Product) =>
-              new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime()
-            }
-            render={(date: string) =>
-              date ? `${dayjs(date).format('DD-MM-YYYY')}` : ''
-            }
+            sorter={(a: Product, b: Product) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime()}
+            render={(date: string) => (date ? dayjs(date).format('DD-MM-YYYY') : '')}
           />
-
           <Column
             title="Наличие на складе"
             dataIndex="inStock"
@@ -165,7 +143,7 @@ const App: React.FC = () => {
           />
         </Table>
       </div>
-      <ProductModalProps
+      <ProductModal
         modalVisible={modalVisible}
         changeModalVisible={changeModalVisible}
         sendFormData={onFinish}
